@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dünya Kupası 2026 — Kupon Takip</title>
+<style>
+  :root{
+    --pitch:#0a3d2e;--pitch-deep:#072a20;--line:#1d6b52;--chalk:#e8efe9;
+    --muted:#8fb3a5;--gold:#e7c46a;--win:#37d67a;--win-bg:rgba(55,214,122,.14);
+    --loss:#e85c5c;--loss-bg:rgba(232,92,92,.12);--pending:#3a5a4e;--card:#0f4a39;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+    background:radial-gradient(circle at 50% -10%, #0e5340 0%, transparent 55%),var(--pitch-deep);
+    color:var(--chalk);min-height:100vh;padding:28px 16px 80px;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+  header{text-align:center;margin-bottom:22px}
+  .eyebrow{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  h1{font-size:30px;font-weight:800;letter-spacing:-.02em;margin:6px 0 4px}
+  .sub{color:var(--muted);font-size:13px}
+  .tabs{display:flex;gap:6px;margin:22px 0 6px;background:var(--pitch);border:1px solid var(--line);border-radius:12px;padding:5px}
+  .tab{flex:1;border:none;background:none;color:var(--muted);font-family:inherit;font-weight:600;font-size:12.5px;padding:10px 6px;border-radius:8px;cursor:pointer;transition:.15s;display:flex;flex-direction:column;gap:3px;align-items:center}
+  .tab .tlabel{letter-spacing:.02em}
+  .tab .tdot{width:7px;height:7px;border-radius:50%;background:var(--pending)}
+  .tab.active{background:var(--line);color:#fff}
+  .tab.st-win .tdot{background:var(--win);box-shadow:0 0 8px var(--win)}
+  .tab.st-loss .tdot{background:var(--loss)}
+  .coupon-head{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:16px 0 14px;display:flex;align-items:center;gap:16px;border-left:5px solid var(--pending);transition:.2s}
+  .coupon-head.win{border-left-color:var(--win);background:var(--win-bg)}
+  .coupon-head.loss{border-left-color:var(--loss);background:var(--loss-bg)}
+  .ch-left{flex:1}
+  .ch-status{font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+  .coupon-head.win .ch-status{color:var(--win)}
+  .coupon-head.loss .ch-status{color:var(--loss)}
+  .ch-prog{font-size:13px;color:var(--muted);margin-top:4px}
+  .ch-odds-wrap{text-align:right}
+  .ch-odds-lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .ch-odds{font-size:30px;font-weight:800;color:var(--gold);line-height:1;font-variant-numeric:tabular-nums}
+  .row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--pending);border-radius:11px;padding:13px 15px;margin-bottom:8px;cursor:pointer;transition:.18s}
+  .row:hover{background:#125440;transform:translateX(2px)}
+  .row.win{border-left-color:var(--win);background:var(--win-bg)}
+  .row.loss{border-left-color:var(--loss);background:var(--loss-bg)}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--pending);flex-shrink:0;transition:.18s}
+  .row.win .dot{background:var(--win);box-shadow:0 0 10px var(--win)}
+  .row.loss .dot{background:var(--loss)}
+  .row.refund{border-left-color:#6c8fa3;background:rgba(108,143,163,.12);opacity:.78}
+  .row.refund .dot{background:#6c8fa3}
+  .row.refund .odds{text-decoration:line-through;opacity:.6}
+  .row-main{flex:1;min-width:0}
+  .match{font-weight:700;font-size:14.5px;letter-spacing:-.01em}
+  .meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+  .pick{display:inline-block;margin-top:5px;font-size:11.5px;background:rgba(231,196,106,.14);color:var(--gold);padding:2px 8px;border-radius:6px;font-weight:600}
+  .odds{font-size:17px;font-weight:800;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums}
+  .date-chip{font-size:10.5px;color:var(--muted);text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums;min-width:74px}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:.2s;z-index:40}
+  .overlay.open{opacity:1;pointer-events:auto}
+  .panel{position:fixed;top:0;right:0;bottom:0;width:360px;max-width:92vw;background:var(--pitch);border-left:1px solid var(--line);transform:translateX(100%);transition:.25s cubic-bezier(.4,0,.2,1);z-index:50;padding:26px 24px;overflow-y:auto;box-shadow:-12px 0 40px rgba(0,0,0,.4)}
+  .panel.open{transform:translateX(0)}
+  .panel-close{position:absolute;top:18px;right:18px;background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;line-height:1}
+  .panel .p-eyebrow{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  .panel h2{font-size:23px;font-weight:800;margin:8px 0 4px;letter-spacing:-.02em}
+  .panel .p-date{color:var(--muted);font-size:13px;margin-bottom:22px}
+  .p-block{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+  .p-block .lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .p-block .val{font-size:16px;font-weight:700;margin-top:3px}
+  .p-block .val.big{font-size:26px;color:var(--gold)}
+  .status-btns{display:flex;gap:6px;margin-top:22px}
+  .sbtn{flex:1;border:1px solid var(--line);background:var(--card);color:var(--chalk);font-family:inherit;font-weight:700;font-size:12px;padding:13px 0;border-radius:10px;cursor:pointer;transition:.15s}
+  .sbtn:hover{filter:brightness(1.15)}
+  .sbtn.win.sel{background:var(--win);border-color:var(--win);color:#04241a}
+  .sbtn.loss.sel{background:var(--loss);border-color:var(--loss);color:#fff}
+  .sbtn.refund.sel{background:#6c8fa3;border-color:#6c8fa3;color:#04241a}
+  .sbtn.pending.sel{background:var(--muted);border-color:var(--muted);color:#04241a}
+  .reset{display:block;margin:30px auto 0;background:none;border:1px solid var(--line);color:var(--muted);font-family:inherit;font-size:12px;padding:9px 18px;border-radius:8px;cursor:pointer}
+  .reset:hover{color:var(--loss);border-color:var(--loss)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">FIFA World Cup 2026</div>
+    <h1>Kupon Takip</h1>
+    <p class="sub">3 ayrı kombine kupon. Hepsi tutarsa kupon yeşil, biri yatarsa kırmızı.</p>
+  </header>
+  <div class="tabs" id="tabs"></div>
+  <div class="coupon-head" id="couponHead">
+    <div class="ch-left">
+      <div class="ch-status" id="chStatus">BEKLİYOR</div>
+      <div class="ch-prog" id="chProg"></div>
+    </div>
+    <div class="ch-odds-wrap">
+      <div class="ch-odds-lbl">Toplam Oran</div>
+      <div class="ch-odds" id="chOdds">0.00</div>
+    </div>
+  </div>
+  <div id="list"></div>
+  <button class="reset" id="reset">Tüm işaretleri sıfırla</button>
+</div>
+<div class="overlay" id="overlay"></div>
+<!-- Supabase JS client (UMD) — window.supabase.createClient sağlar -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<aside class="panel" id="panel">
+  <button class="panel-close" id="pclose">×</button>
+  <div class="p-eyebrow" id="p-eyebrow">Maç</div>
+  <h2 id="p-match"></h2>
+  <div class="p-date" id="p-date"></div>
+  <div class="p-block"><div class="lbl">Bahis türü</div><div class="val" id="p-type"></div></div>
+  <div class="p-block"><div class="lbl">Seçim</div><div class="val" id="p-pick"></div></div>
+  <div class="p-block"><div class="lbl">Oran</div><div class="val big" id="p-odds"></div></div>
+  <div class="status-btns">
+    <button class="sbtn win" data-s="win">Tuttu</button>
+    <button class="sbtn pending" data-s="pending">Bekliyor</button>
+    <button class="sbtn loss" data-s="loss">Yattı</button>
+    <button class="sbtn refund" data-s="refund">İade</button>
+  </div>
+</aside>
+<script>
+const COUPONS=[
+  {name:"Kupon 1",bets:[
+    {d:"06/11 19:00",m:"Mexico – South Africa",t:"1x2",p:"Mexico",o:1.44},
+    {d:"06/13 01:00",m:"USA – Paraguay",t:"Handicap",p:"USA (0)",o:1.45},
+    {d:"06/13 19:00",m:"Qatar – Switzerland",t:"1x2",p:"Switzerland",o:1.25},
+    {d:"06/14 04:00",m:"Australia – Türkiye",t:"Handicap",p:"Türkiye (0)",o:1.32},
+    {d:"06/14 23:00",m:"Ivory Coast – Ecuador",t:"Handicap",p:"Ivory Coast (+1.0)",o:1.25},
+    {d:"06/15 02:00",m:"Sweden – Tunisia",t:"Handicap",p:"Sweden (0)",o:1.41},
+    {d:"06/16 22:00",m:"Iraq – Norway",t:"1x2",p:"Norway",o:1.22},
+    {d:"06/17 17:00",m:"Portugal – DR Congo",t:"1x2",p:"Portugal",o:1.3},
+    {d:"06/17 04:00",m:"Austria – Jordan",t:"1x2",p:"Austria",o:1.34},
+    {d:"06/17 01:00",m:"Argentina – Algeria",t:"Total",p:"over 2",o:1.48},
+    {d:"06/18 02:00",m:"Uzbekistan – Colombia",t:"Total",p:"over 2",o:1.5},
+    {d:"06/18 16:00",m:"Czechia – South Africa",t:"Handicap",p:"Czechia (0)",o:1.44},
+    {d:"06/19 19:00",m:"USA – Australia",t:"1x2",p:"USA",o:1.78},
+    {d:"06/19 01:00",m:"Mexico – Republic of Korea",t:"Handicap",p:"Mexico (0)",o:1.36},
+    {d:"06/20 20:00",m:"Germany – Ivory Coast",t:"Total",p:"over 2",o:1.38},
+    {d:"06/23 03:00",m:"Jordan – Algeria",t:"1x2",p:"Algeria",o:1.62},
+    {d:"06/23 00:00",m:"Norway – Senegal",t:"Total",p:"over 2",o:1.49},
+    {d:"06/23 20:00",m:"England – Ghana",t:"Total",p:"over 2",o:1.33},
+    {d:"06/24 19:00",m:"Bosnia & Herzegovina – Qatar",t:"1x2",p:"Bosnia & Herzegovina",o:1.61},
+    {d:"06/24 22:00",m:"Morocco – Haiti",t:"1x2",p:"Morocco",o:1.34},
+    {d:"06/25 01:00",m:"South Africa – Republic of Korea",t:"Handicap",p:"Republic of Korea (0)",o:1.45},
+    {d:"06/25 20:00",m:"Curacao – Ivory Coast",t:"1x2",p:"Ivory Coast",o:1.26},
+    {d:"06/26 19:00",m:"Senegal – Iraq",t:"1x2",p:"Senegal",o:1.43},
+    {d:"06/27 03:00",m:"New Zealand – Belgium",t:"1x2",p:"Belgium",o:1.29},
+  ]},
+  {name:"Kupon 2",bets:[
+    {d:"06/13 01:00",m:"USA – Paraguay",t:"Handicap",p:"USA (0)",o:1.45},
+    {d:"06/13 22:00",m:"Brazil – Morocco",t:"Total",p:"over 2",o:1.51},
+    {d:"06/14 01:00",m:"Haiti – Scotland",t:"1x2",p:"Scotland",o:1.48},
+    {d:"06/14 04:00",m:"Australia – Türkiye",t:"1x2",p:"Türkiye",o:1.81},
+    {d:"06/14 20:00",m:"Netherlands – Japan",t:"Total",p:"over 1.5",o:1.29},
+    {d:"06/15 02:00",m:"Sweden – Tunisia",t:"Handicap",p:"Sweden (0)",o:1.42},
+    {d:"06/18 16:00",m:"Czechia – South Africa",t:"Handicap",p:"Czechia (0)",o:1.44},
+    {d:"06/25 01:00",m:"South Africa – Republic of Korea",t:"Handicap",p:"Republic of Korea (0)",o:1.46},
+    {d:"06/20 03:00",m:"Türkiye – Paraguay",t:"Handicap",p:"Türkiye (0)",o:1.59},
+    {d:"06/19 19:00",m:"USA – Australia",t:"1x2",p:"USA",o:1.79},
+    {d:"06/25 20:00",m:"Curacao – Ivory Coast",t:"1x2",p:"Ivory Coast",o:1.31},
+    {d:"06/21 04:00",m:"Tunisia – Japan",t:"Handicap",p:"Japan (0)",o:1.32},
+    {d:"06/15 19:00",m:"Belgium – Egypt",t:"Total",p:"over 1.5",o:1.26},
+    {d:"06/22 01:00",m:"New Zealand – Egypt",t:"Handicap",p:"Egypt (0)",o:1.24},
+    {d:"06/16 19:00",m:"France – Senegal",t:"Total",p:"over 2",o:1.43},
+    {d:"06/16 22:00",m:"Iraq – Norway",t:"1x2",p:"Norway",o:1.22},
+    {d:"06/22 21:00",m:"France – Iraq",t:"Handicap 0:1",p:"France (0:1)",o:1.4},
+    {d:"06/26 19:00",m:"Senegal – Iraq",t:"1x2",p:"Senegal",o:1.42},
+    {d:"06/17 04:00",m:"Austria – Jordan",t:"1x2",p:"Austria",o:1.33},
+    {d:"06/23 03:00",m:"Jordan – Algeria",t:"1x2",p:"Algeria",o:1.69},
+    {d:"06/17 17:00",m:"Portugal – DR Congo",t:"1x2",p:"Portugal",o:1.28},
+    {d:"06/17 23:00",m:"Ghana – Panama",t:"Handicap",p:"Ghana (0)",o:1.5},
+  ]},
+  {name:"Kupon 3",bets:[
+    {d:"06/11 19:05",m:"Group A Bottom",t:"Sıralama",p:"South Africa",o:1.8},
+    {d:"06/12 19:00",m:"Group B Qualify",t:"Sıralama",p:"Bosnia & Herzegovina",o:1.3},
+    {d:"06/13 01:00",m:"Group D Top 2 Finish",t:"Sıralama",p:"Türkiye",o:1.55},
+    {d:"06/14 20:00",m:"Group F Bottom",t:"Sıralama",p:"Tunisia",o:1.8},
+    {d:"06/15 16:00",m:"Group H Bottom",t:"Sıralama",p:"Cape Verde",o:1.4},
+    {d:"06/16 19:00",m:"Group I Bottom",t:"Sıralama",p:"Iraq",o:1.3},
+    {d:"06/17 01:00",m:"Group J Bottom",t:"Sıralama",p:"Jordan",o:1.25},
+    {d:"06/18 20:00",m:"Group L Qualify",t:"Sıralama",p:"Croatia",o:1.25},
+  ]},
+];
+let status={};let activeCoupon=0;let activeKey=null;
+const keyOf=(c,i)=>`${c}-${i}`;
+
+// ---- Supabase config (BURAYI DOLDUR) ----
+const SUPABASE_URL="https://fpiiwlyrtheuysjfssfi.supabase.co";
+const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZwaWl3bHlydGhldXlzamZzc2ZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEzNjUwOTcsImV4cCI6MjA5Njk0MTA5N30.L7-8aSxbTueUyG5mTpcGHE-8ThdkKKtNP3nZNbH_hlk";
+const TABLE="coupon_status";
+
+// shareCode: aynı kodu giren tüm cihazlar aynı işaretleri görür.
+// İlk girişte sorulur, localStorage'a kaydedilir, bir daha sorulmaz.
+let shareCode=localStorage.getItem('wc2026-share')||'';
+if(!shareCode){
+  shareCode=(prompt('Paylaşım kodu girin (cihazlar arası senkron için; örn. "abdulkadir-2026"):')||'').trim();
+  if(shareCode)localStorage.setItem('wc2026-share',shareCode);
+}
+
+// Supabase client (UMD: window.supabase.createClient)
+const sb=(window.supabase&&SUPABASE_URL!=="YOUR_SUPABASE_URL")
+  ? window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+  : null;
+if(!sb)console.warn('Supabase yapılandırılmadı — işaretler kaydedilmeyecek. SUPABASE_URL/SUPABASE_KEY doldurun.');
+
+// O share_code'a ait tüm satırları çek, status objesine doldur
+async function loadStatus(){
+  if(!sb||!shareCode)return;
+  const {data,error}=await sb.from(TABLE).select('bet_key,status').eq('share_code',shareCode);
+  if(error){console.error('load failed',error);return;}
+  status={};
+  (data||[]).forEach(r=>{status[r.bet_key]=r.status;});
+}
+
+// Tek bir işareti upsert et (primary key: share_code + bet_key)
+async function saveOne(betKey,st){
+  if(!sb||!shareCode)return;
+  const {error}=await sb.from(TABLE).upsert(
+    {share_code:shareCode,bet_key:betKey,status:st,updated_at:new Date().toISOString()},
+    {onConflict:'share_code,bet_key'}
+  );
+  if(error)console.error('save failed',error);
+}
+
+// Tümünü sıfırla: bu share_code'un tüm satırlarını sil (DELETE policy gerektirir)
+async function clearAll(){
+  if(!sb||!shareCode)return;
+  const {error}=await sb.from(TABLE).delete().eq('share_code',shareCode);
+  if(error)console.error('reset failed',error);
+}
+
+// Realtime: aynı share_code'u açan diğer cihazlarda anlık güncelleme
+function subscribeRealtime(){
+  if(!sb||!shareCode)return;
+  sb.channel('coupon-'+shareCode)
+    .on('postgres_changes',
+      {event:'*',schema:'public',table:TABLE,filter:`share_code=eq.${shareCode}`},
+      payload=>{
+        if(payload.eventType==='DELETE'){
+          const k=payload.old&&payload.old.bet_key;
+          if(k)delete status[k]; else status={};
+        }else{
+          const r=payload.new;
+          status[r.bet_key]=r.status;
+        }
+        render();
+        if(activeKey)syncStatusBtns(status[activeKey]||'pending');
+      })
+    .subscribe();
+}
+const statusOf=(c,i)=>status[keyOf(c,i)]||'pending';
+function totalOdds(c){return COUPONS[c].bets.reduce((a,b,i)=>statusOf(c,i)==='refund'?a:a*b.o,1);}
+function couponStatus(c){const s=COUPONS[c].bets.map((_,i)=>statusOf(c,i));if(s.some(x=>x==='loss'))return 'loss';const live=s.filter(x=>x!=='refund');if(live.length>0&&live.every(x=>x==='win'))return 'win';return 'pending';}
+function wonCount(c){return COUPONS[c].bets.filter((_,i)=>statusOf(c,i)==='win').length;}
+function refundCount(c){return COUPONS[c].bets.filter((_,i)=>statusOf(c,i)==='refund').length;}
+function renderTabs(){
+  const tabs=document.getElementById('tabs');tabs.innerHTML='';
+  COUPONS.forEach((cp,c)=>{
+    const cs=couponStatus(c);
+    const b=document.createElement('button');
+    b.className='tab'+(c===activeCoupon?' active':'')+(cs==='win'?' st-win':cs==='loss'?' st-loss':'');
+    b.innerHTML=`<span class="tdot"></span><span class="tlabel">${cp.name}</span>`;
+    b.onclick=()=>{activeCoupon=c;render();};
+    tabs.appendChild(b);
+  });
+}
+function renderHead(){
+  const c=activeCoupon;const cs=couponStatus(c);
+  const head=document.getElementById('couponHead');
+  head.className='coupon-head'+(cs==='win'?' win':cs==='loss'?' loss':'');
+  document.getElementById('chStatus').textContent=cs==='win'?'KUPON TUTTU 🎉':cs==='loss'?'KUPON YATTI':'BEKLİYOR';
+  const total=COUPONS[c].bets.length;
+  const rc=refundCount(c);
+  document.getElementById('chProg').textContent=`${wonCount(c)} / ${total} maç tuttu`+(rc>0?` · ${rc} iade`:'')+` · ${total} maçlık kombine`;
+  document.getElementById('chOdds').textContent=totalOdds(c).toFixed(2);
+}
+function render(){
+  renderTabs();renderHead();
+  const list=document.getElementById('list');list.innerHTML='';
+  const ordered=COUPONS[activeCoupon].bets
+    .map((row,i)=>({row,i}))
+    .sort((a,b)=>a.row.d.localeCompare(b.row.d));
+  ordered.forEach(({row,i})=>{
+    const s=statusOf(activeCoupon,i);
+    const el=document.createElement('div');
+    el.className='row'+(s==='win'?' win':s==='loss'?' loss':s==='refund'?' refund':'');
+    el.innerHTML=`<span class="dot"></span>
+      <div class="row-main">
+        <div class="match">${row.m}</div>
+        <div class="meta">${row.t}</div>
+        <span class="pick">${row.p}</span>
+      </div>
+      <div class="date-chip">${row.d}</div>
+      <div class="odds">${row.o.toFixed(2)}</div>`;
+    el.onclick=()=>openPanel(activeCoupon,i);
+    list.appendChild(el);
+  });
+}
+function openPanel(c,i){
+  activeKey=keyOf(c,i);const row=COUPONS[c].bets[i];
+  document.getElementById('p-eyebrow').textContent=COUPONS[c].name;
+  document.getElementById('p-match').textContent=row.m;
+  document.getElementById('p-date').textContent='2026/'+row.d;
+  document.getElementById('p-type').textContent=row.t;
+  document.getElementById('p-pick').textContent=row.p;
+  document.getElementById('p-odds').textContent=row.o.toFixed(2);
+  syncStatusBtns(statusOf(c,i));
+  document.getElementById('panel').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closePanel(){document.getElementById('panel').classList.remove('open');document.getElementById('overlay').classList.remove('open');activeKey=null;}
+function syncStatusBtns(s){document.querySelectorAll('.sbtn').forEach(b=>b.classList.toggle('sel',b.dataset.s===s));}
+document.querySelectorAll('.sbtn').forEach(b=>{
+  b.onclick=async()=>{if(!activeKey)return;status[activeKey]=b.dataset.s;syncStatusBtns(b.dataset.s);render();await saveOne(activeKey,b.dataset.s);};
+});
+document.getElementById('pclose').onclick=closePanel;
+document.getElementById('overlay').onclick=closePanel;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closePanel();});
+document.getElementById('reset').onclick=async()=>{status={};render();await clearAll();};
+(async()=>{await loadStatus();render();subscribeRealtime();})();
+</script>
+</body>
+</html>
